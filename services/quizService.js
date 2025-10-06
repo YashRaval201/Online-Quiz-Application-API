@@ -1,31 +1,65 @@
-const quizModel = require('../models/quizModel');
-const { validateQuestion } = require('../utils/validator');
+const Quiz = require('../models/Quiz');
 
-function createQuiz(title) {
-    return quizModel.createQuiz(title);
+// Create a Quiz
+async function createQuiz(title) {
+  const quiz = new Quiz({ title, questions: [] });
+  return await quiz.save();
 }
 
-function getAllQuizzes() {
-    return quizModel.getAllQuizzes();
+// Get all quizzes
+async function getAllQuizzes() {
+  return await Quiz.find();
 }
 
-function addQuestion(quizId, question) {
-    validateQuestion(question);
-    return quizModel.addQuestion(quizId, question);
+// Add a question
+async function addQuestion(quizId, question) {
+  const quiz = await Quiz.findById(quizId);
+  if (!quiz) throw new Error('Quiz not found');
+
+  quiz.questions.push(question);
+  await quiz.save();
+  return quiz;
 }
 
-function getQuestions(quizId) {
-    return quizModel.getQuestions(quizId);
+// Get questions (without correct answers)
+async function getQuestions(quizId) {
+  const quiz = await Quiz.findById(quizId);
+  if (!quiz) throw new Error('Quiz not found');
+
+  return quiz.questions.map(q => {
+    const qObj = q.toObject();
+    delete qObj.correct;
+    return qObj;
+  });
 }
 
-function submitAnswers(quizId, answers) {
-    return quizModel.submitAnswers(quizId, answers);
+// Submit answers
+async function submitAnswers(quizId, answers) {
+  const quiz = await Quiz.findById(quizId);
+  if (!quiz) throw new Error('Quiz not found');
+
+  let score = 0;
+  quiz.questions.forEach(q => {
+    const ans = answers.find(a => a.questionId === q._id.toString());
+    if (!ans) return;
+
+    if (q.type === 'single' && ans.selected === q.correct) score++;
+    else if (q.type === 'multiple') {
+      const correct = JSON.stringify(q.correct.sort());
+      const selected = JSON.stringify(ans.selected.sort());
+      if (correct === selected) score++;
+    } else if (q.type === 'text') {
+      if (ans.selected && ans.selected.split(' ').length <= (q.wordLimit || 300)) score++;
+    }
+  });
+
+  return { score, total: quiz.questions.length };
 }
 
 module.exports = {
-    createQuiz,
-    getAllQuizzes,
-    addQuestion,
-    getQuestions,
-    submitAnswers
+  createQuiz,
+  getAllQuizzes,
+  addQuestion,
+  getQuestions,
+  submitAnswers
 };

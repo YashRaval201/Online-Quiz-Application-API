@@ -1,31 +1,50 @@
 const quizService = require('../services/quizService');
 
-exports.createQuiz = (req, res) => {
-    const { title } = req.body;
-    const quiz = quizService.createQuiz(title);
-    res.json(quiz);
+exports.createQuiz = async (req, res) => {
+  try {
+    const quiz = await quizService.createQuiz(req.body.title);
+    res.status(201).json(quiz);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.getAllQuizzes = (req, res) => {
-    const quizzes = quizService.getAllQuizzes();
+exports.getAllQuizzes = async (req, res) => {
+  try {
+    const quizzes = await quizService.getAllQuizzes();
     res.json(quizzes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.addQuestion = (req, res) => {
+exports.addQuestion = async (req, res) => {
+  try {
     const { quizId } = req.params;
-    const question = quizService.addQuestion(quizId, req.body);
+    const question = await quizService.addQuestion(quizId, req.body);
     res.json(question);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.getQuestions = (req, res) => {
+exports.getQuestions = async (req, res) => {
+  try {
     const { quizId } = req.params;
-    const questions = quizService.getQuestions(quizId);
+    const questions = await quizService.getQuestions(quizId);
     res.json(questions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.submitAnswers = (req, res) => {
+exports.submitAnswers = async (req, res) => {
+  try {
     const { quizId } = req.params;
     const { answers } = req.body;
-    const score = quizService.submitAnswers(quizId, answers);
+    const score = await quizService.submitAnswers(quizId, answers);
     res.json(score);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
