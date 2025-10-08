@@ -6,6 +6,7 @@ Backend API for creating quizzes, adding questions, retrieving questions (withou
 - Node.js + Express 4.x
 - MongoDB with Mongoose
 - JWT Authentication (jsonwebtoken + bcryptjs)
+- Google Gemini AI for text answer evaluation
 - Jest (configured in `package.json`)
 
 ## Requirements
@@ -26,10 +27,16 @@ The server logs each incoming request method and path to the console.
 Database connection is defined in `db.js` and currently uses a hardcoded URI:
 `mongodb://localhost:27017/quiz-app`.
 
-Optional: Set `JWT_SECRET` environment variable for production:
+Optional: Set environment variables for production:
 ```bash
 export JWT_SECRET=your_secure_secret_key
+export GEMINI_API_KEY=your_gemini_api_key
 ```
+
+**Get Gemini API Key:**
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Add it to your `.env` file: `GEMINI_API_KEY=your_actual_api_key`
 
 ## Authentication
 The API uses JWT tokens for authentication. Most quiz operations require a valid Bearer token.
@@ -121,7 +128,32 @@ Content-Type: application/json
   "answers": [
     { "questionId": "<id>", "selected": "b" },
     { "questionId": "<id>", "selected": ["a","c"] },
-    { "questionId": "<id>", "selected": "Free text within word limit" }
+    { "questionId": "<id>", "selected": "Free text answer evaluated by Gemini AI" }
+  ]
+}
+```
+
+**Response includes detailed feedback:**
+```json
+{
+  "score": 2,
+  "total": 3,
+  "detailedResults": [
+    {
+      "questionId": "<id>",
+      "isCorrect": true,
+      "feedback": "Correct answer"
+    },
+    {
+      "questionId": "<id>",
+      "isCorrect": true,
+      "feedback": "All correct options selected"
+    },
+    {
+      "questionId": "<id>",
+      "isCorrect": true,
+      "feedback": "Answer demonstrates good understanding of the concept"
+    }
   ]
 }
 ```
@@ -143,15 +175,16 @@ controllers/
 models/
   Quiz.js
   User.js
-routes/
+  routes/
   quizRoutes.js
   authRoutes.js
-services/
+  services/
   quizService.js
   authService.js
+  geminiService.js
 middleware/
   authMiddleware.js
-utils/
+  utils/
   validator.js
   tokenBlacklist.js
 db.js
@@ -233,9 +266,16 @@ server.js
                                                        └─────────────┘
 ```
 
+### AI-Powered Text Evaluation
+- **Gemini AI Integration**: Text-based answers are evaluated using Google's Gemini AI
+- **Smart Scoring**: Answers are marked correct if Gemini confidence ≥ 75%
+- **Detailed Feedback**: Each answer receives specific feedback from AI
+- **Fallback Handling**: If Gemini API is unavailable, falls back to basic word count validation
+
 ### Security Features
 - JWT tokens with expiration (1 hour)
 - Password hashing with bcryptjs
 - Token blacklisting for logout
 - Auth middleware protecting sensitive operations
 - Input validation for questions and answers
+- AI-powered answer evaluation with confidence scoring

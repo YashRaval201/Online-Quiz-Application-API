@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const connectDB = require('./db');
 const quizRoutes = require('./routes/quizRoutes');
@@ -14,9 +15,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Add this log BEFORE routes
 app.use((req, res, next) => {
-  console.log(`📩 Incoming Request: ${req.method} ${req.url}`);
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
+  // console.log(`📩 Incoming Request: ${req.method} ${req.url}`);
+  // console.log('Headers:', req.headers);
+  // console.log('Body:', req.body);
   next();
 });
 
@@ -30,7 +31,7 @@ app.use((err, req, res, next) => {
 
 // Test endpoint to verify JSON parsing
 app.post('/test-json', (req, res) => {
-  console.log('Test endpoint - Body:', req.body);
+  // console.log('Test endpoint - Body:', req.body);
   res.json({ received: req.body, bodyType: typeof req.body });
 });
 

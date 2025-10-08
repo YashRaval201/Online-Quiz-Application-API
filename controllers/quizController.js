@@ -42,8 +42,9 @@ exports.submitAnswers = async (req, res) => {
   try {
     const { quizId } = req.params;
     const { answers } = req.body;
-    const score = await quizService.submitAnswers(quizId, answers);
-    res.json(score);
+    const userId = req.user && req.user.id;
+    const result = await quizService.submitAnswers(quizId, answers, userId);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
